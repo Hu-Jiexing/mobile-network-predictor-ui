@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Upload File - Network Prediction</title>
+</head>
+<body>
+  <h2>Upload Excel/CSV File</h2>
+  <label>Backend URL: <input id="backendUrl" type="url" placeholder="https://your-backend.onrender.com"></label><br><br>
+  <input id="file" type="file" accept=".xlsx,.xls,.csv"><br><br>
+  <button onclick="submitFile()">Predict & Download</button>
+  <p id="status"></p>
+
+  <script>
+    async function submitFile() {
+      const backend = document.getElementById("backendUrl").value.trim().replace(/\/+$/, "");
+      const file = document.getElementById("file").files[0];
+      if (!backend || !file) { alert("Please provide backend URL and file"); return; }
+
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("as_csv", "true");
+
+      document.getElementById("status").innerText = "Uploading…";
+
+      try {
+        const resp = await fetch(`${backend}/predict-file?as_csv=true`, { method: "POST", body: fd });
+        if (!resp.ok) throw new Error(await resp.text());
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "predictions.csv"; a.click();
+        document.getElementById("status").innerText = "✅ Predictions downloaded.";
+      } catch (e) {
+        document.getElementById("status").innerText = "❌ Error: " + e.message;
+      }
+    }
+  </script>
+</body>
+</html>
